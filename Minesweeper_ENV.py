@@ -52,6 +52,7 @@ class Minesweeper(gym.Env):
             ms.showMines(self.revealedBoxes, self.mineField, box_x, box_y)
             ms.gameOverAnimation(self.mineField, self.revealedBoxes, self.markedMines, 'LOSS')
             reward = self.get_reward(negative_reward='loss')
+            self.total_reward = 0
             done = self.check_done(gameLost=True)
             observation = self.get_observation()
             return observation, reward, done, {}
@@ -71,12 +72,17 @@ class Minesweeper(gym.Env):
         return
 
     def get_observation(self):
-        observation = ms.blankField()
+        # Create a new empty tuple to store the observation
+        observation_tuple = tuple()
         for x in range(ms.FIELDWIDTH):
+            # Create a sub-tuple for each row
+            row_tuple = tuple()
             for y in range(ms.FIELDHEIGHT):
                 if self.revealedBoxes[x][y]:
-                    observation[x][y] = self.mineField[x][y]
-        return observation
+                    row_tuple += (self.mineField[x][y],)  # Add element to the row_tuple
+            # Add the row_tuple to the main observation_tuple
+            observation_tuple += (row_tuple,)
+        return observation_tuple
     
     def get_reward(self, negative_reward=False):
         if negative_reward: # If the agent selects a tile they already selected
