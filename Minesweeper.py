@@ -497,7 +497,7 @@ def terminate():
     # simple function to exit game
     
     pygame.quit()
-    sys.exit()
+    return
 
 def checkForKeyPress():
 
@@ -513,6 +513,30 @@ def checkForKeyPress():
         terminate()
     return keyUpEvents[0].key
 
+def init_render():
+    global FPSCLOCK, DISPLAYSURFACE, BASICFONT, RESET_SURF, RESET_RECT, SHOW_SURF, SHOW_RECT
+    pygame.init()
+    pygame.display.set_caption('Minesweeper')
+    FPSCLOCK = pygame.time.Clock()
+    DISPLAYSURFACE = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
+    BASICFONT = pygame.font.SysFont(FONTTYPE, FONTSIZE)
+
+    # obtain reset & show objects and rects
+    RESET_SURF, RESET_RECT = drawButton('RESET', TEXTCOLOR_3, RESETBGCOLOR, WINDOWWIDTH/2, WINDOWHEIGHT-120)
+    SHOW_SURF, SHOW_RECT = drawButton('SHOW ALL', TEXTCOLOR_3, RESETBGCOLOR, WINDOWWIDTH/2, WINDOWHEIGHT-95)
+    return
+
+def render(mineField, revealedBoxes, markedMines):
+    # draw field
+    DISPLAYSURFACE.fill(BGCOLOR)
+    pygame.draw.rect(DISPLAYSURFACE, FIELDCOLOR, (XMARGIN-5, YMARGIN-5, (BOXSIZE+GAPSIZE)*FIELDWIDTH+5, (BOXSIZE+GAPSIZE)*FIELDHEIGHT+5))
+    drawField()
+    drawMinesNumbers(mineField)
+    drawCovers(revealedBoxes, markedMines)
+    # redraw screen, wait clock tick
+    pygame.display.update()
+    return
+
 # run code
-if __name__ == '__main__':
-    main()
+#if __name__ == '__main__':
+    #main()
