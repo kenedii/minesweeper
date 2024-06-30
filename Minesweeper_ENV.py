@@ -72,18 +72,18 @@ class Minesweeper(gym.Env):
         return
 
     def get_observation(self):
-        if self.agent.type == 'deepq':
-            observation = []
+        if self.agent and self.agent.type == 'deepq':
+            observation = np.full((ms.FIELDWIDTH, ms.FIELDHEIGHT), '[ ]')  # Initialize with '[ ]' (hidden)
+
             for x in range(ms.FIELDWIDTH):
                 for y in range(ms.FIELDHEIGHT):
                     if self.revealedBoxes[x][y]:
-                        observation.append(self.mineField[x][y])
-                    else:
-                        observation.append('hidden')
+                        observation[x][y] = self.mineField[x][y]  # Use the actual mineField value
+
             return observation
         else:
             # Create a new empty tuple to store the observation
-            observation_tuple = tuple()
+            observation_tuple = []
             for x in range(ms.FIELDWIDTH):
                 # Create a sub-tuple for each row
                 row_tuple = tuple()

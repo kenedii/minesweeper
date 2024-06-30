@@ -25,9 +25,9 @@ class Agent:
 
     def _build_model(self):
         model = Sequential()
-        model.add(Dense(24, input_dim=self.state_size, activation='relu'))
+        model.add(Dense(24, input_shape=(np.prod(self.state_size),), activation='relu'))  # Flatten state_size
         model.add(Dense(24, activation='relu'))
-        model.add(Dense(self.action_size, activation='linear'))
+        model.add(Dense(np.prod(self.action_size), activation='linear'))  # Flatten action_size
         model.compile(loss='mse', optimizer=Adam(learning_rate=self.learning_rate))
         return model
 
@@ -37,12 +37,35 @@ class Agent:
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
+    def preprocess_state(self, state):
+        state_numeric = []
+        for row in state:
+            numeric_row = []
+            for cell in row:
+                if isinstance(cell, str):
+                    if cell == '[ ]':
+                        numeric_row.append(-1.0)
+                    else:
+                        numeric_value = float(cell.strip('[]'))
+                        numeric_row.append(numeric_value)
+                elif isinstance(cell, (int, np.integer)):
+                    numeric_row.append(float(cell))
+                else:
+                    raise ValueError(f"Unexpected cell type: {type(cell)}")
+            state_numeric.append(numeric_row)
+
+        assert len(state_numeric) == self.state_size[0] and all(len(row) == self.state_size[1] for row in state_numeric), "State is not the correct size"
+
+        return np.array(state_numeric, dtype=np.float32).flatten()
+
+
     def choose_action(self, state):
         if np.random.rand() < self.epsilon:
             x = np.random.choice(self.action_space[0].n)
             y = np.random.choice(self.action_space[1].n)
             return (x, y)
-        #state = np.reshape(state, [1, self.state_size])  # Ensure the state is reshaped correctly
+        state = self.preprocess_state(state)  # Preprocess the state
+        state = state[np.newaxis, :]  # Add batch dimension
         q_values = self.model.predict(state)
         action_index = np.argmax(q_values[0])
         x = action_index // self.action_space[1].n
@@ -53,8 +76,8 @@ class Agent:
         minibatch = np.random.choice(len(self.memory), batch_size, replace=False)
         for index in minibatch:
             state, action, reward, next_state, done = self.memory[index]
-            #state = np.reshape(state, [1, self.state_size])
-            #next_state = np.reshape(next_state, [1, self.state_size])
+            state = self.preprocess_state(state).reshape(1, -1)
+            next_state = self.preprocess_state(next_state).reshape(1, -1)
             target = self.model.predict(state)
             action_index = action[0] * self.action_space[1].n + action[1]
             if done:
@@ -65,7 +88,6 @@ class Agent:
             self.model.fit(state, target, epochs=1, verbose=0)
         if self.epsilon > self.epsilon_min:
             self.epsilon *= self.epsilon_decay
-
 
     def save_model(self, filepath):
         self.model.save(filepath)

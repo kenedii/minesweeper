@@ -5,13 +5,13 @@ from DeepQ_Agent import Agent as deepq
 import time
 import numpy as np
 
-num_episodes = 1000 # Number of episodes (games) to train the agent
+num_episodes = 10000 # Number of episodes (games) to train the agent
 render = True # Set to True to render the game, False to run in the background
 save = True # Whether to save the model after training
 saved_model_path = 'dqn_model.keras' # Path to save the model
 save_after_every = 50 # Save the model after every n episodes
 
-agent = deepq(20, 1)
+agent = deepq((20,20), 400)
 env = Minesweeper(render=render,agent = agent)
 env.reset()
 #agent = deepq(len(env.observation), len(env.action_space))
@@ -67,9 +67,12 @@ def qlearning_agent_act(observation, agent, env):
     return next_observation, reward, done, info
 
 def deepq_agent_act(observation, agent, env):
+    #print('nya')
+    #print(observation)
+    #print('nya')
     action = agent.choose_action(observation)
     next_state, reward, done, _ = env.step(action)
-    next_state = np.reshape(next_state, [1, len(next_state)])
+    #next_state = np.reshape(next_state, [1, len(next_state)])
     agent.remember(observation, action, reward, next_state, done)
     return next_state, reward, done, {}
 
