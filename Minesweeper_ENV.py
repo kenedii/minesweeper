@@ -6,7 +6,7 @@ import numpy as np
 import Minesweeper as ms
 
 class Minesweeper(gym.Env):
-    def __init__(self, render=False) -> None:
+    def __init__(self, render=False, agent=None) -> None:
         super().__init__()
         self.mineField = None
         self.zeroListXY = []
@@ -17,7 +17,7 @@ class Minesweeper(gym.Env):
 
         self.observation = None
         self.action_space = spaces.Tuple((spaces.Discrete(ms.FIELDWIDTH), spaces.Discrete(ms.FIELDHEIGHT)))
-
+        self.agent = agent
         self.renderOn = render
 
     def reset(self):
@@ -72,17 +72,14 @@ class Minesweeper(gym.Env):
         return
 
     def get_observation(self):
-        # Create a new empty tuple to store the observation
-        observation_tuple = tuple()
+        observation = np.full((ms.FIELDWIDTH, ms.FIELDHEIGHT), '[ ]')  # Initialize with '[ ]' (hidden)
+
         for x in range(ms.FIELDWIDTH):
-            # Create a sub-tuple for each row
-            row_tuple = tuple()
             for y in range(ms.FIELDHEIGHT):
                 if self.revealedBoxes[x][y]:
-                    row_tuple += (self.mineField[x][y],)  # Add element to the row_tuple
-            # Add the row_tuple to the main observation_tuple
-            observation_tuple += (row_tuple,)
-        return observation_tuple
+                    observation[x][y] = self.mineField[x][y]  # Use the actual mineField value
+
+        return observation
     
     def get_reward(self, negative_reward=False):
         if negative_reward: # If the agent selects a tile they already selected
